@@ -311,7 +311,7 @@ static uint32_t ed_panel_sig(void)
     for (i = 0; i < NE; i++)
         h = h * 31u + (uint32_t)(enc_seen[i] & 0x7F);
     return h * 31u + ((uint32_t)ui.page | (uint32_t)ui.home << 8 | (uint32_t)ui.layer << 9 | (uint32_t)ui.menu << 13 |
-                      (uint32_t)(song.playing != 0) << 16);
+                      (uint32_t)(song.playing != 0) << 16) ^ (song.master_q12 >> 6) << 20;   /* (MASTER: steps of 1/64) */
 }
 static void ed_panel_frame(void)
 {
@@ -331,6 +331,8 @@ static void ed_panel_frame(void)
     ed_b((ui.home ? 1u : 0u) | (ui.menu ? 2u : 0u) | (song.playing ? 4u : 0u));
     ed_b(ui.page);
     ed_str(ui.home ? "" : PAGES[ui.page].title, 15);     /* the page's title */
+    ed_b(song.master_q12);                               /* the MASTER pot's gain, 0 .. 4096 (main.c: (knob / 1023)^2) */
+    ed_b(song.master_q12 >> 7);
 }
 
 UI_SMALL static void ed_sync(void)                                /* main loop */
